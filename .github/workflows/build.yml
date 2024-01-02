@@ -1,0 +1,61 @@
+name: Commit Workflow
+
+on:
+  push:
+    branches: ['main']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    outputs:
+      tag: ${{ steps.get_version.outputs.tag }}
+      preview: ${{ steps.get_preview.outputs.preview }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - run: npm install
+
+      - name: Build the package
+        run: npm run build
+
+      - name: Archive project folder
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist-folder
+          path: ./dist
+
+      - id: get_version
+        run: |
+          version=$(node -p 'require("./package.json").version')
+          echo "::set-output name=tag::$version"
+
+      - id: get_preview
+        run: |
+          preview=$(node -p 'require("./package.json").preview ? "true" : "false"')
+          echo "::set-output name=preview::$preview"
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ needs.build.outputs.tag }}
+          release_name: Release v${{ needs.build.outputs.tag }}
+          body: |
+            Release v${{ needs.build.outputs.tag }}
+          draft: false
+          prerelease: ${{ needs.build.outputs.preview == 'true' }}
