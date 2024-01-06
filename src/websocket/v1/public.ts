@@ -25,9 +25,9 @@ export default {
           await sendMessage({ type: "message", payload: messageData });
           break;
         }
-        case "houseScoreUpdate": {
+        case "torrentUpdate": {
           const houseData = args.payload;
-          await sendMessage({ type: "houseScoreUpdate", payload: houseData });
+          await sendMessage({ type: "torrentUpdate", payload: houseData });
           break;
         }
         case "eventUpdate": {

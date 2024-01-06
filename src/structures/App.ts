@@ -11,11 +11,8 @@ import { LoggerType, logger } from "../utils/logger";
 import EventEmitter from "events";
 import socketIo, { Server as SocketServer, Socket } from "socket.io";
 import { Server } from "http";
-// import * as CircularJSON from "circular-json";
-// import * as dayjs from "dayjs";
-// import { EventEmitter } from "ws";
-// import { v4 as uuidv4 } from "uuid";
-// import { CompressionTypes, Partitioners } from "kafkajs";
+import { DownloadState, Torrents } from "../functions/type";
+import { ParsedPath } from "path";
 
 interface UserData {
   _id: string;
@@ -54,6 +51,10 @@ interface App {
   wspaths: Map<string, any>;
   io: SocketServer;
   wsevents: EventEmitter;
+  TorrentHandler: any;
+  torrents: Torrents;
+  downloadState: DownloadState;
+  downloadPath: string;
 }
 export interface AppTypes extends App {}
 class App {
@@ -154,7 +155,7 @@ class App {
         "loadroutes",
         "loadincomingEvents",
         "sendSystemStatus",
-        "initDatabase",
+        "torrentDownloader",
       ]) {
         const handler = require(`../handlers/${x}.js`);
         await new handler(this).start();

@@ -156,4 +156,20 @@ async function updateSystemSpecs(): Promise<SystemSpecs[]> {
   }
 }
 
+export async function checkStorange(fileSize: number) {
+  const diskUsage = await getDiskUsage(getPrimaryDiskPath());
+  console.log(fileSize);
+  if (fileSize * 2 > diskUsage.freeStorage) {
+    console.log("You cant Download This Torrent! Becuase Limit of Storange");
+    return false;
+  } else {
+    console.log("You can Downlaod The File ", formatBytes(fileSize));
+    console.log(
+      "Becuase Your System Has More ",
+      formatBytes(diskUsage.freeStorage)
+    );
+    return true;
+  }
+}
+
 export default updateSystemSpecs;

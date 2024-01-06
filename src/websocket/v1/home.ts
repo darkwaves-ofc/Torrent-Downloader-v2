@@ -4,7 +4,6 @@ import dayjs from "dayjs";
 import userDataDb from "../../schema/userData";
 import Crypto from "node:crypto";
 import broadcastMessage from "../../schema/broadcastMessage";
-import eventDataSchema from "../../schema/eventData";
 import { AppTypes } from "../../structures/App";
 import { Socket as BaseSocket } from "socket.io";
 
