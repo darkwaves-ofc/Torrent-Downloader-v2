@@ -7,7 +7,8 @@ async function createZipArchive(
   torrentId: string,
   torrentInfo: any,
   downloadState: any,
-  wsevents: EventEmitter
+  wsevents: EventEmitter,
+  zipFileName: string
 ) {
   const { default: gulp } = await import("gulp");
   const { default: zip } = await import("gulp-zip");
@@ -15,7 +16,7 @@ async function createZipArchive(
   return new Promise((resolve, reject) => {
     gulp
       .src(sourcePath)
-      .pipe(zip("archive.zip"))
+      .pipe(zip(zipFileName + ".zip"))
       .pipe(gulp.dest(zipFilePath))
       .on("finish", () => {
         console.log("Zip creation complete");

@@ -6,7 +6,7 @@ const downloadSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  downloadPath: String,
+  // downloadPath: String,
   torrentName: String,
   state: {
     type: String,

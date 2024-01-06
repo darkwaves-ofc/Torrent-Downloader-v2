@@ -4,6 +4,7 @@ import { AppTypes } from "../../../structures/App";
 import path from "node:path";
 import fs from "fs";
 import Download from "../../../schema/Download";
+import { findFilesWithExtension } from "../../../utils/ensureTempFolder";
 
 class Route {
   constructor(client: AppTypes) {
@@ -31,21 +32,27 @@ class Route {
       try {
         const torrentId = req.params.torrentId;
         // Get the current directory of the project
-        const filePath = path.join(__dirname, "../../../../temp", torrentId);
+        const filePath = path.join(
+          __dirname,
+          "../../../../download/",
+          torrentId
+        );
 
-        console.log("Download requested for file:", filePath);
+        const filesWithExtension = findFilesWithExtension(filePath, "zip");
 
-        // Check if the response has already been sent
-        if (res.headersSent) {
-          notFoundError("Download request already completed.", 400);
-        }
-
-        // Check if the file exists
-        if (!fs.existsSync(filePath)) {
-          console.log("File not found:", filePath);
+        if (filesWithExtension.length === 0) {
+          console.log("No matching file found:", filePath);
           notFoundError("Not Found", 404);
+          return;
         }
 
+        const fileToSend = filesWithExtension[0]; // Choose the first file found
+
+        if (!fs.existsSync(fileToSend)) {
+          console.log("File not found:", fileToSend);
+          notFoundError("Not Found", 404);
+          return;
+        }
         // Check for the 'Range' header in the request
         const range = req.headers.range;
         if (range) {
@@ -77,14 +84,14 @@ class Route {
             console.log("Download request was aborted by the client.");
           });
           // If no 'Range' header, send the entire file
-          res.download(filePath, (err) => {
+          res.download(fileToSend, (err) => {
             if (err) {
               console.error("Error sending file:", err);
               if (!res.headersSent) {
                 res.status(500).json({ error: "Error sending file" });
               }
             } else {
-              console.log("File sent successfully:", filePath);
+              console.log("File sent successfully:", fileToSend);
             }
           });
         }

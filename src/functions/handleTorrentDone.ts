@@ -32,13 +32,25 @@ async function handleTorrentDone(
     console.log("Torrent download finished");
     ensureTempFolder();
 
-    const zipFileName = torrent.name;
-    const filePath = path.join(__dirname, `../../temp`, torrentId, "/*");
+    function removeFileExtension(fileName: string) {
+      const lastDotIndex = fileName.lastIndexOf(".");
+      if (lastDotIndex === -1) {
+        return fileName; // No file extension found
+      } else {
+        return fileName.substring(0, lastDotIndex);
+      }
+    }
+
+    const zipFileName = removeFileExtension(torrentInfo.name);
+    const filePath = path.join(__dirname, `../../temp`, torrentId, "/*/**");
+
     console.log("file path", filePath);
     const folderPath = `../../temp/${torrentId}`;
+
     const zipFilePath = path.join(__dirname, "../../download", torrentId);
     console.log("Zip File Path ", zipFilePath);
 
+    console.log(removeFileExtension(torrentInfo.name));
     wsevents.emit(`public`, {
       type: "torrentUpdate",
       payload: {
@@ -53,7 +65,8 @@ async function handleTorrentDone(
       torrentId,
       torrentInfo,
       downloadState,
-      wsevents
+      wsevents,
+      zipFileName
     );
     const archivePath = zipFilePath + ".zip";
     console.log("achive path ", archivePath);
@@ -83,7 +96,6 @@ async function handleTorrentDone(
         existingDownload.torrentName = torrent.name;
         existingDownload.totalSize = formatBytes(torrent.length);
         existingDownload.state = downloadState[torrentId];
-        existingDownload.downloadPath = archivePath;
         existingDownload.torrentInfo = torrentInfo;
         await existingDownload.save();
         console.log(`Updated torrent info for ID ${torrentId}`);
@@ -91,7 +103,6 @@ async function handleTorrentDone(
         console.log("Torrent Not Found On the Database");
         const download = new Download({
           torrentId,
-          downloadPath: archivePath,
           torrentName: torrent.name,
           totalSize: formatBytes(torrent.length),
           state: downloadState[torrentId],
@@ -103,7 +114,6 @@ async function handleTorrentDone(
       wsevents.emit("torrentUpdate", {
         torrentId: torrentId,
         state: downloadState[torrentId],
-        downloadPath: archivePath,
         torrentInfo,
       });
     } else {
@@ -111,7 +121,6 @@ async function handleTorrentDone(
       wsevents.emit("torrentUpdate", {
         torrentId: torrentId,
         state: downloadState[torrentId],
-        downloadPath: archivePath,
         torrentInfo,
       });
     }
