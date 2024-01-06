@@ -18,28 +18,23 @@ class Route {
 
         if (!magnetLink) {
           console.error("No Magnet Link Request");
-          return res.status(400).json({ error: "Magnet Link Not Found" });
+          notFoundError("Magnet Link Not Found", 404);
         }
 
         if (!magnetLink.startsWith("magnet:?")) {
           console.error("Incorrect Magnet Link:", magnetLink);
-          return res
-            .status(400)
-            .json({ error: "Incorrect magnet link format" });
+          notFoundError("Incorrect magnet link format", 400);
         }
 
         const torrentId = generateTorrentId(magnetLink);
         const existingTorrent = client.torrents[torrentId];
         if (existingTorrent) {
-          return res
-            .status(400)
-            .json({ error: `Torrent with ID ${torrentId} already exists.` });
+          notFoundError(`Torrent with ID ${torrentId} already exists.`, 400);
         }
 
         torrentDownloadSetup(
           torrentId,
           magnetLink,
-          client.downloadPath,
           client.TorrentHandler,
           client.downloadState,
           client.torrents,

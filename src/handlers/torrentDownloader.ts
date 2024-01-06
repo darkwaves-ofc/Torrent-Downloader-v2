@@ -17,7 +17,7 @@ export = class WebTorrentInitializer {
     const { default: WebTorrent } = await import("webtorrent");
     this.client.TorrentHandler = new WebTorrent();
 
-    this.client.downloadPath = path.join(__dirname, "../../temp/downloads");
+    // this.client.downloadPath = path.join(__dirname, "../../downloads");
     this.client.downloadState = {};
     this.client.torrents = {};
 

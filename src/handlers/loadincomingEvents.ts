@@ -96,9 +96,10 @@ export = class WebSocketInitializer {
     }
 
     for (const [name, path] of this.client.wspaths) {
+      console.log(path);
       const nameSpace = io.of(name);
       nameSpace.on("connection", (socket: Socket) => {
-        path.run(this.client, socket, socket.request);
+        path.default.run(this.client, socket, socket.request);
       });
     }
     this.client.logger.log("[ • ] Listening to incoming events");

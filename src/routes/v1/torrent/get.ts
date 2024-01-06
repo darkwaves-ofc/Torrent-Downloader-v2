@@ -3,12 +3,27 @@ import bcrypt from "bcrypt";
 import { AppTypes } from "../../../structures/App";
 import path from "node:path";
 import fs from "fs";
+import Download from "../../../schema/Download";
 
 class Route {
   constructor(client: AppTypes) {
     const router: Router = express.Router();
 
     router.get("/torrents", async (req: Request, res: Response) => {
+      const notFoundError = function (message: string, code: number): Response {
+        return res.status(code).json({ error: true, message });
+      };
+
+      try {
+        const downloads = await Download.find().sort({ createdAt: -1 });
+        res.status(200).json(downloads);
+      } catch (error) {
+        console.error("Error fetching downloads:", error);
+        res.status(500).json({ error: "Error fetching downloads" });
+      }
+    });
+
+    router.get("/torrent/:torrentId", async (req: Request, res: Response) => {
       const notFoundError = function (message: string, code: number): Response {
         return res.status(code).json({ error: true, message });
       };

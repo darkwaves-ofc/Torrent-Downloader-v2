@@ -6,11 +6,11 @@ import handleTorrentEvents from "./handleTorrentEvents";
 import saveTorrentInfoToDatabase from "./saveTorrentInfoToDatabase";
 import { DownloadState, Torrents } from "./type";
 import EventEmitter from "events";
+import path from "path";
 
 async function torrentDownloadSetup(
   torrentId: string,
   magnetLink: string,
-  downloadPath: string,
   client: any,
   downloadState: DownloadState,
   torrents: Torrents,
@@ -21,19 +21,23 @@ async function torrentDownloadSetup(
       return console.log(`Torrent with ID ${torrentId} already exists.`);
     }
 
-    downloadState[torrentId] = "Ready";
+    downloadState[torrentId] = "Setting Up";
 
-    wsevents.emit("torrentUpdate", {
-      torrentId: torrentId,
-      state: downloadState[torrentId],
+    wsevents.emit(`public`, {
+      type: "torrentUpdate",
+      payload: {
+        torrentId: torrentId,
+        state: downloadState[torrentId],
+      },
     });
+
+    const downloadPath = path.join(__dirname, `../../temp/${torrentId}`);
 
     const torrent: Torrent = client.add(magnetLink, {
       uploadLimit: 1024 * 100,
       destroyStoreOnDestroy: true,
       path: downloadPath,
     });
-
     return new Promise((resolve, reject) => {
       torrent.on("ready", async () => {
         const torrentInfo = {
@@ -52,10 +56,13 @@ async function torrentDownloadSetup(
         if (!storangecheck) {
           console.log("Storage Error");
           downloadState[torrentId] = "Error";
-          wsevents.emit("torrentUpdate", {
-            torrentId: torrentId,
-            torrentInfo,
-            state: downloadState[torrentId],
+          wsevents.emit(`public`, {
+            type: "torrentUpdate",
+            payload: {
+              torrentId: torrentId,
+              torrentInfo,
+              state: downloadState[torrentId],
+            },
           });
           return;
         }
@@ -72,10 +79,13 @@ async function torrentDownloadSetup(
         }
 
         downloadState[torrentId] = "Ready";
-        wsevents.emit(`torrentUpdate`, {
-          torrentId: torrentId,
-          torrentInfo,
-          state: downloadState[torrentId],
+        wsevents.emit(`public`, {
+          type: "torrentUpdate",
+          payload: {
+            torrentId: torrentId,
+            torrentInfo,
+            state: downloadState[torrentId],
+          },
         });
 
         resolve(torrentInfo);

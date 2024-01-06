@@ -54,7 +54,6 @@ interface App {
   TorrentHandler: any;
   torrents: Torrents;
   downloadState: DownloadState;
-  downloadPath: string;
 }
 export interface AppTypes extends App {}
 class App {

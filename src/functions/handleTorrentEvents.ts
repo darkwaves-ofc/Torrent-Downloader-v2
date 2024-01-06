@@ -3,6 +3,7 @@ import formatBytes from "../utils/formatBytes";
 import handleTorrentDone from "./handleTorrentDone";
 import { Torrent } from "webtorrent";
 import { DownloadState, Torrents } from "./type";
+import EventEmitter from "events";
 
 interface TorrentInfo {
   ready: boolean;
@@ -13,16 +14,12 @@ interface TorrentInfo {
   files: { name: string; length: string }[];
 }
 
-interface WSEvents {
-  emit(event: string, data: any): void;
-}
-
 function handleTorrentEvents(
   torrent: Torrent,
   torrentId: string,
   torrents: Torrents,
   downloadState: DownloadState,
-  wsevents: WSEvents,
+  wsevents: EventEmitter,
   torrentInfo: TorrentInfo
 ): void {
   let downloadDataTimeout: NodeJS.Timeout | null = null;
@@ -45,11 +42,14 @@ function handleTorrentEvents(
         if (!torrent.done) {
           downloadState[torrentId] = "Downloading";
           console.log("Downloading:", downloadData); // Debugging statement
-          wsevents.emit("torrentUpdate", {
-            torrentId: torrentId,
-            torrentInfo,
-            downloadData,
-            state: downloadState[torrentId],
+          wsevents.emit(`public`, {
+            type: "torrentUpdate",
+            payload: {
+              torrentId: torrentId,
+              torrentInfo,
+              downloadData,
+              state: downloadState[torrentId],
+            },
           });
         } else {
           return;
