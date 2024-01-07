@@ -12,7 +12,7 @@ export default function ensureTempFolder(folderPath: string) {
       fs.mkdirSync(tempFolderPath, { recursive: true }); // Create folder and its parents if they don't exist
     }
   } catch (err) {
-    console.error('Error creating folder:', err);
+    console.error("Error creating folder:", err);
     // Handle the error accordingly based on your use case
   }
 }
