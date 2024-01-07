@@ -5,14 +5,22 @@ interface FileList {
   [fileName: string]: string;
 }
 
-export default function ensureTempFolder() {
-  const tempFolderPath = path.join(__dirname, "../../temp");
-  if (!fs.existsSync(tempFolderPath)) {
-    fs.mkdirSync(tempFolderPath);
+export default function ensureTempFolder(folderPath: string) {
+  const tempFolderPath = path.resolve(folderPath); // Using path.resolve() for correct path resolution
+  try {
+    if (!fs.existsSync(tempFolderPath)) {
+      fs.mkdirSync(tempFolderPath, { recursive: true }); // Create folder and its parents if they don't exist
+    }
+  } catch (err) {
+    console.error('Error creating folder:', err);
+    // Handle the error accordingly based on your use case
   }
 }
 
-export function findFilesWithExtension(folderPath: string, extension: string): string[] {
+export function findFilesWithExtension(
+  folderPath: string,
+  extension: string
+): string[] {
   const files = fs.readdirSync(folderPath);
   const matchingFiles: string[] = [];
 

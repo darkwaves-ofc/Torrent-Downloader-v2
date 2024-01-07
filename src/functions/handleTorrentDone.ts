@@ -30,7 +30,7 @@ async function handleTorrentDone(
   try {
     downloadState[torrentId] = "Achiving";
     console.log("Torrent download finished");
-    ensureTempFolder();
+    // ensureTempFolder();
 
     function removeFileExtension(fileName: string) {
       const lastDotIndex = fileName.lastIndexOf(".");
@@ -42,13 +42,11 @@ async function handleTorrentDone(
     }
 
     const zipFileName = removeFileExtension(torrentInfo.name);
-    const filePath = path.join(__dirname, `../../temp`, torrentId, "/*/**");
+    const sourcePath = path.join(__dirname, `../../temp/`, torrentId);
 
-    console.log("file path", filePath);
-    const folderPath = `../../temp/${torrentId}`;
+    const folderPath = `${__dirname}/temp/${torrentId}`;
 
     const zipFilePath = path.join(__dirname, "../../download", torrentId);
-    console.log("Zip File Path ", zipFilePath);
 
     console.log(removeFileExtension(torrentInfo.name));
     wsevents.emit(`public`, {
@@ -60,7 +58,7 @@ async function handleTorrentDone(
       },
     });
     const achived = await createZipArchive(
-      filePath,
+      sourcePath,
       zipFilePath,
       torrentId,
       torrentInfo,
