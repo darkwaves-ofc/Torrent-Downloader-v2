@@ -1,7 +1,7 @@
-Backend Structure With NodeJS
+Torrent Downloader Backend (v2)
 ============
 
-This project is a Node.js application structured to assist developers in \[add a brief description of the project's purpose or functionality\].
+This project is a Torrent Downloader application.
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 
