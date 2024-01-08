@@ -93,8 +93,15 @@ async function handleTorrentDone(
       }
       console.log("Archive created successfully");
       downloadState[torrentId] = "Done!";
-
-      const existingDownload = await Download.findOne({ torrentId });
+      wsevents.emit(`public`, {
+        type: "torrentUpdate",
+        payload: {
+          torrentId: torrentId,
+          torrentInfo,
+          state: downloadState[torrentId],
+        },
+      });
+        const existingDownload = await Download.findOne({ torrentId });
       if (existingDownload) {
         existingDownload.torrentName = torrent.name;
         existingDownload.totalSize = formatBytes(torrent.length);
@@ -114,19 +121,18 @@ async function handleTorrentDone(
         await download.save();
         console.log("New Download Info Created: ", download);
       }
-      wsevents.emit("torrentUpdate", {
-        torrentId: torrentId,
-        state: downloadState[torrentId],
-        torrentInfo,
-      });
+
     } else {
       downloadState[torrentId] = "Done!";
-      wsevents.emit("torrentUpdate", {
-        torrentId: torrentId,
-        state: downloadState[torrentId],
-        torrentInfo,
+      wsevents.emit(`public`, {
+        type: "torrentUpdate",
+        payload: {
+          torrentId: torrentId,
+          torrentInfo,
+          state: downloadState[torrentId],
+        },
       });
-    }
+      }
   } catch (err) {
     console.error("Error handling torrent done event:", err);
     // Handle error
