@@ -16,8 +16,8 @@ You can view [Documentation](#) Regarding to this project.
 Install with npm
 
 ```bash
-  git clone https://github.com/darkwaves-ofc/NodeJS-Backend-Structure
-  cd NodeJS-Backend-Structure
+  git clone https://github.com/darkwaves-ofc/Torrent-Downloader-v2
+  cd Torrent-Downloader-v2
   npm install
   npm run dev
 ```
@@ -41,7 +41,7 @@ To run this project, you will need to add the following environment variables to
 
 ## License
 
-[MIT](https://github.com/darkwaves-ofc/NodeJS-Backend-Structure/blob/main/LICENSE)
+[MIT](https://github.com/darkwaves-ofc/Torrent-Downloader-v2/blob/main/LICENSE)
 
 
 ## Support
