@@ -32,7 +32,12 @@ async function handleTorrentDone(
     console.log("Torrent download finished");
     // ensureTempFolder();
 
-    function removeFileExtension(fileName: string) {
+    function removeFileExtension(fileName: string, sourcePath: string): string {
+      const sourceStats = fs.statSync(sourcePath);
+      if (sourceStats.isDirectory()) {
+        return fileName; // Return folder name if sourcePath is a directory
+      }
+
       const lastDotIndex = fileName.lastIndexOf(".");
       if (lastDotIndex === -1) {
         return fileName; // No file extension found
@@ -41,14 +46,14 @@ async function handleTorrentDone(
       }
     }
 
-    const zipFileName = removeFileExtension(torrentInfo.name);
     const sourcePath = path.join(__dirname, `../../temp/`, torrentId);
+    const zipFileName = removeFileExtension(torrentInfo.name, sourcePath);
 
     const folderPath = `${__dirname}/temp/${torrentId}`;
 
     const zipFilePath = path.join(__dirname, "../../download", torrentId);
 
-    console.log(removeFileExtension(torrentInfo.name));
+    console.log(removeFileExtension(torrentInfo.name, sourcePath));
     wsevents.emit(`public`, {
       type: "torrentUpdate",
       payload: {

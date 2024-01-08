@@ -21,20 +21,34 @@ export function findFilesWithExtension(
   folderPath: string,
   extension: string
 ): string[] {
-  const files = fs.readdirSync(folderPath);
-  const matchingFiles: string[] = [];
+  let matchingFiles: string[] = [];
 
-  files.forEach((file) => {
-    const filePath = path.join(folderPath, file);
-    const fileStat = fs.statSync(filePath);
-
-    if (fileStat.isDirectory()) {
-      const subdirectoryFiles = findFilesWithExtension(filePath, extension);
-      matchingFiles.push(...subdirectoryFiles); // Add files from subdirectories
-    } else if (path.extname(file) === `.${extension}`) {
-      matchingFiles.push(filePath); // Add file path to the list
+  // Check if folder exists
+  try {
+    if (!fs.existsSync(folderPath)) {
+      throw new Error("Folder does not exist");
     }
-  });
+
+    const files = fs.readdirSync(folderPath);
+
+    files.forEach((file) => {
+      const filePath = path.join(folderPath, file);
+      const fileStat = fs.statSync(filePath);
+
+      if (fileStat.isDirectory()) {
+        const subdirectoryFiles = findFilesWithExtension(filePath, extension);
+        matchingFiles.push(...subdirectoryFiles); // Add files from subdirectories
+      } else if (path.extname(file) === `.${extension}`) {
+        matchingFiles.push(filePath); // Add file path to the list
+      }
+    });
+  } catch (error: any) {
+    console.error("Error:", error.message);
+    // Handle the case where the folder doesn't exist or is empty
+    // You can choose to log an error or take specific action here
+    // For now, returning an empty array
+    matchingFiles = [];
+  }
 
   return matchingFiles;
 }

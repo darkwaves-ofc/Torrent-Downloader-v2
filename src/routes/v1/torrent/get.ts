@@ -31,7 +31,6 @@ class Route {
 
       try {
         const torrentId = req.params.torrentId;
-        // Get the current directory of the project
         const filePath = path.join(
           __dirname,
           "../../../../download/",
@@ -47,56 +46,70 @@ class Route {
         }
 
         const fileToSend = filesWithExtension[0]; // Choose the first file found
-
+        console.log(fileToSend);
         if (!fs.existsSync(fileToSend)) {
           console.log("File not found:", fileToSend);
           notFoundError("Not Found", 404);
           return;
         }
-        // Check for the 'Range' header in the request
+
+        const stats = fs.statSync(fileToSend);
+        const fileSize = stats.size;
+
         const range = req.headers.range;
+        console.log(range);
         if (range) {
-          // Parse the range header
           const [start, end] = range.replace(/bytes=/, "").split("-");
-          const fileSize = fs.statSync(filePath).size;
-          const chunkSize = end
-            ? parseInt(end) - parseInt(start) + 1
-            : fileSize;
+          const startByte = parseInt(start, 10);
+          const endByte = end ? parseInt(end, 10) : fileSize - 1;
+          const chunkSize = endByte - startByte + 1;
 
-          // Set headers for partial content
-          res.status(206);
-          res.setHeader(
-            "Content-Range",
-            `bytes ${start}-${end || fileSize - 1}/${fileSize}`
-          );
-          res.setHeader("Accept-Ranges", "bytes");
-          res.setHeader("Content-Length", chunkSize);
-
-          // Create a readable stream for the requested chunk and pipe it to the response
-          const fileStream = fs.createReadStream(filePath, {
-            start: parseInt(start),
-            end: end ? parseInt(end) : undefined,
+          res.writeHead(206, {
+            "Content-Range": `bytes ${startByte}-${endByte}/${fileSize}`,
+            "Accept-Ranges": "bytes",
+            "Content-Length": chunkSize,
+            "Content-Type": "application/zip",
+            "Content-Disposition": `attachment; filename="${path.basename(
+              fileToSend
+            )}"`,
           });
-          fileStream.pipe(res);
+
+          const fileStream = fs.createReadStream(fileToSend, {
+            start: startByte,
+            end: endByte,
+          });
+          fileStream.on("open", () => {
+            fileStream.pipe(res);
+          });
+          fileStream.on("error", (err) => {
+            console.error("File stream error:", err);
+            res.end(err);
+          });
         } else {
-          // Listen for 'aborted' event and log a custom message
-          res.on("aborted", () => {
-            console.log("Download request was aborted by the client.");
+          // res.download(fileToSend, (err) => {
+          //   if (err) {
+          //     console.error("Error sending file:", err);
+          //     if (!res.headersSent) {
+          //       res.status(500).json({ error: "Error sending file" });
+          //     }
+          //   } else {
+          //     console.log("File sent successfully:", fileToSend);
+          //   }
+          // });
+          res.writeHead(200, {
+            "Content-Length": fileSize,
+            "Content-Type": "application/zip",
+            "Content-Disposition": `attachment; filename="${path.basename(
+              fileToSend
+            )}"`,
           });
-          // If no 'Range' header, send the entire file
-          res.download(fileToSend, (err) => {
-            if (err) {
-              console.error("Error sending file:", err);
-              if (!res.headersSent) {
-                res.status(500).json({ error: "Error sending file" });
-              }
-            } else {
-              console.log("File sent successfully:", fileToSend);
-            }
-          });
+
+          const fileStream = fs.createReadStream(fileToSend);
+          fileStream.pipe(res);
         }
       } catch (error) {
-        return console.log(error);
+        console.error("Error:", error);
+        res.status(500).json({ error: "Server Error" });
       }
     });
 
