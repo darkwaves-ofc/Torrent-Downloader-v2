@@ -1,4 +1,21 @@
-import mongoose from "mongoose";
+import mongoose, { Document, Schema } from "mongoose";
+
+export interface Download extends Document {
+  torrentId: string;
+  downloadPath: string;
+  torrentName: string;
+  state:
+    | "Setting Up"
+    | "Ready"
+    | "Archiving"
+    | "Done!"
+    | "Downloading"
+    | "Error";
+  torrentInfo: Object;
+  createdAt: Date;
+  totalSize: string;
+  downloadData: Object;
+}
 
 const downloadSchema = new mongoose.Schema({
   torrentId: {
@@ -10,7 +27,7 @@ const downloadSchema = new mongoose.Schema({
   torrentName: String,
   state: {
     type: String,
-    enum: ["Setting Up", "Ready", "Achiving", "Done!", "Downloading", "Error"],
+    enum: ["Setting Up", "Ready", "Archiving", "Done!", "Downloading", "Error"],
     default: "Setting Up",
   },
   torrentInfo: {
@@ -23,7 +40,10 @@ const downloadSchema = new mongoose.Schema({
   totalSize: {
     type: String,
   },
+  downloadData: {
+    type: Object,
+  },
   // Add other fields as needed, e.g., timestamps, progress, etc.
 });
-const Download = mongoose.model("Download", downloadSchema);
-export default Download;
+const DownloadModel = mongoose.model<Download>("Download", downloadSchema);
+export default DownloadModel;

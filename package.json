@@ -4,7 +4,7 @@
   "description": "Torrent-Downloader Backend",
   "main": "dist/index.js",
   "types": "src/index.ts",
-  "preview": false,
+  "preview": true,
   "homepage": "https://github.com/darkwaves-ofc/NodeJS-Backend-Structure",
   "bugs": {
     "url": "https://github.com/darkwaves-ofc/NodeJS-Backend-Structure/issues",

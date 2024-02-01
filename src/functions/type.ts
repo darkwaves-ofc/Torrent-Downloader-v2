@@ -8,7 +8,7 @@ export interface DownloadState {
   [key: string]:
     | "Setting Up"
     | "Ready"
-    | "Achiving"
+    | "Archiving"
     | "Done!"
     | "Downloading"
     | "Error";

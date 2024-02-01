@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import { AppTypes } from "../../../structures/App";
 import torrentDownloadSetup from "../../../functions/torrentDownloadSetup";
 import generateTorrentId from "../../../utils/generateTorrentId";
+import Download from "../../../schema/Download";
 
 class Route {
   constructor(client: AppTypes) {
@@ -32,13 +33,27 @@ class Route {
           notFoundError(`Torrent with ID ${torrentId} already exists.`, 400);
         }
 
+        const existdownload = await Download.findOne({ torrentId: torrentId });
+        let download;
+        if (existdownload) {
+          download = existdownload;
+        } else {
+          download = new Download({
+            torrentId,
+            magnetLink,
+          });
+        }
+
+        console.log(client.details);
         torrentDownloadSetup(
           torrentId,
           magnetLink,
           client.TorrentHandler,
           client.downloadState,
           client.torrents,
-          client.wsevents
+          client.wsevents,
+          client.details,
+          download
         );
 
         // console.log(torrentData);

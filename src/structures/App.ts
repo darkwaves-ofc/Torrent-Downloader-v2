@@ -54,6 +54,11 @@ interface App {
   TorrentHandler: any;
   torrents: Torrents;
   downloadState: DownloadState;
+  // Add other properties as per your actual structure
+  details: {
+    tempPath: string;
+    downloadPath: string;
+  };
 }
 export interface AppTypes extends App {}
 class App {

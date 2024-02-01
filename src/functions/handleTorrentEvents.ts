@@ -4,6 +4,8 @@ import handleTorrentDone from "./handleTorrentDone";
 import { Torrent } from "webtorrent";
 import { DownloadState, Torrents } from "./type";
 import EventEmitter from "events";
+import { Download } from "../schema/Download";
+import { AppTypes } from "../structures/App";
 
 interface TorrentInfo {
   ready: boolean;
@@ -14,19 +16,25 @@ interface TorrentInfo {
   files: { name: string; length: string }[];
 }
 
-function handleTorrentEvents(
+async function handleTorrentEvents(
   torrent: Torrent,
   torrentId: string,
   torrents: Torrents,
   downloadState: DownloadState,
   wsevents: EventEmitter,
-  torrentInfo: TorrentInfo
-): void {
+  torrentInfo: TorrentInfo,
+  details: AppTypes["details"],
+  downloadSchema: Download
+): Promise<void> {
   let downloadDataTimeout: NodeJS.Timeout | null = null;
+
+  downloadState[torrentId] = "Downloading";
+  downloadSchema.state = downloadState[torrentId];
+  await downloadSchema.save();
 
   torrent.on("download", async () => {
     if (!downloadDataTimeout) {
-      downloadDataTimeout = setTimeout(() => {
+      downloadDataTimeout = setTimeout(async () => {
         const downloadData = {
           downloading: true,
           torrentId: torrentId,
@@ -40,8 +48,9 @@ function handleTorrentEvents(
           totalSize: formatBytes(torrent.length),
         };
         if (!torrent.done) {
-          downloadState[torrentId] = "Downloading";
           console.log("Downloading:", downloadData); // Debugging statement
+          downloadSchema.downloadData = downloadData
+          await downloadSchema.save();
           wsevents.emit(`public`, {
             type: "torrentUpdate",
             payload: {
@@ -74,7 +83,9 @@ function handleTorrentEvents(
         torrentId,
         wsevents,
         downloadState,
-        torrentInfo
+        torrentInfo,
+        details,
+        downloadSchema
       );
     } catch (error) {
       console.error("Error in handleTorrentDone:", error); // Debugging statement

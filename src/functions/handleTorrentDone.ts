@@ -1,4 +1,4 @@
-import Download from "../schema/Download";
+import { Download } from "../schema/Download";
 import fs from "fs";
 import path from "path";
 import tmp from "tmp-promise";
@@ -9,6 +9,7 @@ import saveFile from "../utils/saveFile";
 import { DownloadState, Torrents } from "./type";
 import { Torrent } from "webtorrent";
 import EventEmitter from "events";
+import { AppTypes } from "../structures/App";
 
 interface TorrentInfo {
   ready: boolean;
@@ -25,13 +26,16 @@ async function handleTorrentDone(
   torrentId: string,
   wsevents: EventEmitter,
   downloadState: DownloadState,
-  torrentInfo: TorrentInfo
+  torrentInfo: TorrentInfo,
+  details: AppTypes["details"],
+  downloadSchema: Download
 ): Promise<void> {
   try {
-    downloadState[torrentId] = "Achiving";
+    downloadState[torrentId] = "Archiving";
     console.log("Torrent download finished");
     // ensureTempFolder();
-
+    downloadSchema.state = downloadState[torrentId];
+    await downloadSchema.save();
     function removeFileExtension(fileName: string, sourcePath: string): string {
       const sourceStats = fs.statSync(sourcePath);
       if (sourceStats.isDirectory()) {
@@ -48,12 +52,8 @@ async function handleTorrentDone(
 
     const sourcePath = path.join(__dirname, `../../temp/`, torrentId);
     const zipFileName = removeFileExtension(torrentInfo.name, sourcePath);
-
-    const folderPath = `${__dirname}/temp/${torrentId}`;
-
     const zipFilePath = path.join(__dirname, "../../download", torrentId);
 
-    console.log(removeFileExtension(torrentInfo.name, sourcePath));
     wsevents.emit(`public`, {
       type: "torrentUpdate",
       payload: {
@@ -92,7 +92,11 @@ async function handleTorrentDone(
         }
       }
       console.log("Archive created successfully");
+
       downloadState[torrentId] = "Done!";
+      downloadSchema.state = downloadState[torrentId];
+      await downloadSchema.save();
+
       wsevents.emit(`public`, {
         type: "torrentUpdate",
         payload: {
@@ -101,29 +105,32 @@ async function handleTorrentDone(
           state: downloadState[torrentId],
         },
       });
-        const existingDownload = await Download.findOne({ torrentId });
-      if (existingDownload) {
-        existingDownload.torrentName = torrent.name;
-        existingDownload.totalSize = formatBytes(torrent.length);
-        existingDownload.state = downloadState[torrentId];
-        existingDownload.torrentInfo = torrentInfo;
-        await existingDownload.save();
-        console.log(`Updated torrent info for ID ${torrentId}`);
-      } else {
-        console.log("Torrent Not Found On the Database");
-        const download = new Download({
-          torrentId,
-          torrentName: torrent.name,
-          totalSize: formatBytes(torrent.length),
-          state: downloadState[torrentId],
-          torrentInfo: torrentInfo,
-        });
-        await download.save();
-        console.log("New Download Info Created: ", download);
-      }
-
+      // const existingDownload = await Download.findOne({ torrentId });
+      // if (existingDownload) {
+      //   existingDownload.torrentName = torrent.name;
+      //   existingDownload.totalSize = formatBytes(torrent.length);
+      //   existingDownload.state = downloadState[torrentId];
+      //   existingDownload.torrentInfo = torrentInfo;
+      //   await existingDownload.save();
+      //   console.log(`Updated torrent info for ID ${torrentId}`);
+      // } else {
+      //   console.log("Torrent Not Found On the Database");
+      //   const download = new Download({
+      //     torrentId,
+      //     torrentName: torrent.name,
+      //     totalSize: formatBytes(torrent.length),
+      //     state: downloadState[torrentId],
+      //     torrentInfo: torrentInfo,
+      //   });
+      // await download.save();
+      // console.log("New Download Info Created: ", download);
+      // }
     } else {
       downloadState[torrentId] = "Done!";
+      
+      downloadSchema.state = downloadState[torrentId];
+      await downloadSchema.save();
+    
       wsevents.emit(`public`, {
         type: "torrentUpdate",
         payload: {
@@ -132,7 +139,7 @@ async function handleTorrentDone(
           state: downloadState[torrentId],
         },
       });
-      }
+    }
   } catch (err) {
     console.error("Error handling torrent done event:", err);
     // Handle error
